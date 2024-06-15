@@ -10,7 +10,11 @@ const IncomeModelSchema = new mongoose.Schema(
       type: Number,
       required: true,
     },
-    income: {
+    outstanding: {
+      type: Number,
+      required: true,
+    },
+    income_added: {
       type: Number,
       required: true,
     },

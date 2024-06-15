@@ -17,15 +17,6 @@ export class ExpenseAPI {
 
   public async new(expenseAmount: number, warnMe?: boolean) {
     try {
-      if (warnMe) {
-        const warning = await ExpenseWarning.checkForWarning(
-          expenseAmount,
-          this.year,
-          this.month
-        );
-        if (warning) return warning;
-      }
-
       // Deduct the expense from the income of the provided month for the provided year
       const income = new Income(this.year, this.month);
       await income.deduct(expenseAmount);
@@ -41,6 +32,15 @@ export class ExpenseAPI {
       });
       const savedExpense = await newExpense.save();
       console.log(savedExpense);
+
+      if (warnMe) {
+        const warning = await ExpenseWarning.checkForWarning(
+          expenseAmount,
+          this.year,
+          this.month
+        );
+        if (warning) return warning;
+      }
     } catch (err) {
       throw err;
     }
@@ -48,14 +48,23 @@ export class ExpenseAPI {
 }
 
 class ExpenseWarning {
-  private static capAmount = 5000;
-  private static capPercentYellow = 70;
-  private static capPercentRed = 90;
+  private static capAmount = 3000;
+  private static moderateWarningPercent = 70;
+  private static highWarningPercent = 90;
 
   private static warningSeverity = {
-    moderate: "Be careful with your expense please!",
-    high: "You are burning up way too much money dawg!",
-    severe: "Are you crazy! That's it I am blocking your account!",
+    moderate: {
+      severity: "Moderate",
+      message: "Be careful with your expenses please!",
+    },
+    high: {
+      severity: "High",
+      message: "You are burning up way too much money dawg!",
+    },
+    severe: {
+      severity: "Severe",
+      message: "Are you crazy! That's it I am blocking your account!",
+    },
   };
 
   public static async checkForWarning(
@@ -66,15 +75,15 @@ class ExpenseWarning {
     try {
       const outstanding = await Income.getOutstandingFor(year, month);
 
-      let outStandingAfterExpense = outstanding - expense;
+      const outStandingAfterExpense = outstanding - expense;
       if (outStandingAfterExpense <= 0) return this.warningSeverity.severe;
 
-      outStandingAfterExpense =
+      const outStandingPercent =
         (this.capAmount / outStandingAfterExpense) * 100;
 
-      if (outStandingAfterExpense >= this.capPercentRed)
+      if (outStandingPercent >= this.highWarningPercent)
         return this.warningSeverity.high;
-      if (outStandingAfterExpense >= this.capPercentYellow)
+      if (outStandingPercent >= this.moderateWarningPercent)
         return this.warningSeverity.moderate;
 
       return null;
