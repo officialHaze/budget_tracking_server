@@ -3,17 +3,19 @@ import "dotenv/config";
 import express from "express";
 import { createServer as createHttpServer } from "http";
 import mongoose from "mongoose";
+import RouteErrorHandler from "./handlers/RouteErrorHandler";
+import ExpressConfig from "./ExpressConfig";
+import RouteInitializer from "./RouteInitializer";
 
 class Server {
   static app = express();
-  static httpServer = createHttpServer();
+  static httpServer = createHttpServer(this.app);
 
   static PORT = process.env.PORT ?? 8000;
 
   static sessionId = randomUUID();
 
-  public static start() {
-    // Listen on PORT
+  private static listen() {
     this.httpServer.listen(this.PORT, () => {
       console.log(
         `[${this.sessionId}] HTTP Server started and listening on PORT: ${this.PORT}`
@@ -27,8 +29,20 @@ class Server {
           console.log(`[${this.sessionId}] Connected to MongoDB on cloud`)
         );
     });
+  }
+
+  public static start() {
+    // Config
+    new ExpressConfig(this.app).init();
+
+    // Listen on PORT
+    this.listen();
 
     // Routes
+    new RouteInitializer(this.app).init();
+
+    // Global route error handler
+    this.app.use(RouteErrorHandler.exec);
   }
 }
 
