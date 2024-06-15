@@ -1,0 +1,21 @@
+{
+  "name": "fms-server",
+  "version": "0.0.1",
+  "description": "Track budget and finances",
+  "main": "server.js",
+  "scripts": {
+    "dev": "clear && nodemon src/server.ts"
+  },
+  "author": "Moinak Dey",
+  "license": "ISC",
+  "devDependencies": {
+    "@types/express": "^4.17.21",
+    "@types/node": "^20.14.2",
+    "ts-node": "^10.9.2"
+  },
+  "dependencies": {
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2",
+    "mongoose": "^8.4.1"
+  }
+}
