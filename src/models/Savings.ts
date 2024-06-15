@@ -10,7 +10,7 @@ const SavingSchema = new mongoose.Schema(
       type: Number,
       required: true,
     },
-    amount: {
+    savings_amount: {
       type: Number,
       required: true,
     },

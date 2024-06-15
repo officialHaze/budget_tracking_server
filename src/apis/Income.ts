@@ -9,55 +9,17 @@ export class IncomeAPI {
     this.month = month;
   }
 
-  private async calculateOutstanding(income: number) {
-    try {
-      let prevMonth = this.month - 1;
-      let year = this.year;
-
-      let prevMonthOutstanding = income;
-
-      if (prevMonth < 1) {
-        // Get the last month of prev year
-        prevMonth = 12;
-        year = this.year - 1;
-      }
-
-      const prevIncome = await Income.findOne(
-        { year, month: prevMonth },
-        { outstanding: true }
-      );
-      if (prevIncome) prevMonthOutstanding += prevIncome.outstanding;
-
-      return prevMonthOutstanding;
-    } catch (error) {
-      throw error;
-    }
-  }
-
-  public static async getOutstandingFor(year: number, month: number) {
-    try {
-      let outstanding = 0;
-
-      const income = await Income.findOne({
-        year,
-        month,
-      }).sort({ created_at: -1 }); // Latest record
-
-      if (income) outstanding += income.outstanding;
-
-      return outstanding;
-    } catch (error) {
-      throw error;
-    }
-  }
-
   public async new(amount: number) {
     try {
       const newIncome = new Income({
         year: this.year,
         month: this.month,
         income_added: amount,
-        outstanding: await this.calculateOutstanding(amount),
+        outstanding: await Outstanding.calculateOutstandingFor(
+          amount,
+          this.year,
+          this.month
+        ),
       });
       console.log("*** Creating new Income record ***");
       const savedIncome = await newIncome.save();
@@ -73,6 +35,9 @@ export class IncomeAPI {
 
       if (to === "add") newOutstanding = oldAmount + newAmount;
       else if (to === "deduct") newOutstanding = oldAmount - newAmount;
+
+      if (newOutstanding < 0)
+        throw new Error("!!! Alert! Oustanding income is going below zero!");
 
       console.log("*** Updating existing Income record ***");
       const updatedIncome = await Income.findOneAndUpdate(
@@ -122,16 +87,55 @@ export class IncomeAPI {
           "No income report found for the provided year and month!"
         );
 
-      // Update the existing record
-      console.log("*** Updating existing income record ***");
-      const outstandingAfterExpense = income.outstanding - amount;
-
-      if (outstandingAfterExpense < 0)
-        throw new Error(
-          "!!! Alert! Expense is more than the current outstanding income!"
-        );
-
       await this.update(amount, income.outstanding, "deduct");
+    } catch (error) {
+      throw error;
+    }
+  }
+}
+
+export class Outstanding {
+  public static async calculateOutstandingFor(
+    income: number,
+    year: number,
+    month: number
+  ) {
+    try {
+      let prevMonth = month - 1;
+      let year_ = year;
+
+      let prevMonthOutstanding = income;
+
+      if (prevMonth < 1) {
+        // Get the last month of prev year
+        prevMonth = 12;
+        year_ = year - 1;
+      }
+
+      const prevIncome = await Income.findOne(
+        { year: year_, month: prevMonth },
+        { outstanding: true }
+      );
+      if (prevIncome) prevMonthOutstanding += prevIncome.outstanding;
+
+      return prevMonthOutstanding;
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  public static async getOutstandingFor(year: number, month: number) {
+    try {
+      let outstanding = 0;
+
+      const income = await Income.findOne({
+        year,
+        month,
+      }).sort({ created_at: -1 }); // Latest record
+
+      if (income) outstanding += income.outstanding;
+
+      return outstanding;
     } catch (error) {
       throw error;
     }

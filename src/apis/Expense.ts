@@ -1,5 +1,5 @@
 import Expense from "../models/Expense";
-import { IncomeAPI as Income } from "./Income";
+import { IncomeAPI as Income, Outstanding } from "./Income";
 
 export class ExpenseAPI {
   year: number;
@@ -73,7 +73,7 @@ class ExpenseWarning {
     month: number
   ) {
     try {
-      const outstanding = await Income.getOutstandingFor(year, month);
+      const outstanding = await Outstanding.getOutstandingFor(year, month);
 
       const outStandingAfterExpense = outstanding - expense;
       if (outStandingAfterExpense <= 0) return this.warningSeverity.severe;
