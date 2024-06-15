@@ -10,9 +10,16 @@ const ExpenseSchema = new mongoose.Schema(
       type: Number,
       required: true,
     },
-    amount: {
+    expense_amount: {
       type: Number,
       required: true,
+    },
+    paid_to: {
+      type: String,
+      required: true,
+    },
+    reason: {
+      type: String,
     },
   },
   {
