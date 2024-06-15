@@ -7,13 +7,14 @@ const router = express.Router();
 
 router.post("/add", async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const { year, month, amount } = req.body;
+    const { year, month, income, type, source } = req.body;
     if (!year) throw { status: 400, error: "Year is required!" };
     if (!month) throw { status: 400, error: "Month is required!" };
-    if (!amount) throw { status: 400, error: "Amount is required!" };
+    if (!income) throw { status: 400, error: "Income is required!" };
+    if (!type) throw { status: 400, error: "Income type is required!" };
 
-    const income = new Income(year, month);
-    await income.add(amount);
+    const income_ = new Income(year, month, type, source);
+    await income_.add(income);
 
     return res.status(200).json({ message: "Income added successfully!" });
   } catch (err) {
