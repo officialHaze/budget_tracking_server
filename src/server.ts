@@ -33,13 +33,13 @@ class Server {
 
   public static start() {
     // Config
-    new ExpressConfig(this.app).init();
+    ExpressConfig.init(this.app);
 
     // Listen on PORT
     this.listen();
 
     // Routes
-    new RouteInitializer(this.app).init();
+    RouteInitializer.init(this.app);
 
     // Global route error handler
     this.app.use(RouteErrorHandler.exec);
