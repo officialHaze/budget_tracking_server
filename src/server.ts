@@ -41,7 +41,7 @@ class Server {
     // Routes
     RouteInitializer.init(this.app);
 
-    // Global route error handler
+    // Global error handler for any error in the routes
     this.app.use(RouteErrorHandler.exec);
   }
 }
