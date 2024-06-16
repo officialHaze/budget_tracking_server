@@ -48,7 +48,7 @@ export class ExpenseAPI {
 }
 
 class ExpenseWarning {
-  private static capAmount = 3000;
+  private static capAmount = 5000;
   private static moderateWarningPercent = 70;
   private static highWarningPercent = 90;
 

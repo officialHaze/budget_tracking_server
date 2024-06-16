@@ -42,6 +42,23 @@ export class SavingsAPI {
     }
   }
 
+  public async getCurrentSavingsForMonth() {
+    try {
+      const savings = await Savings.findOne(
+        { year: this.year, month: this.month },
+        { savings_amount: true }
+      ).sort({ created_at: -1 });
+      if (!savings)
+        throw new Error(
+          "Savings record for the provided month of the given year doesn't exist!"
+        );
+
+      return savings.savings_amount;
+    } catch (error) {
+      throw error;
+    }
+  }
+
   private async new(amount: number) {
     try {
       console.log("*** Creating new Savings record ***");
@@ -67,7 +84,7 @@ export class SavingsAPI {
       if (newSavingsAmt <= 0)
         throw new Error(" !!! Alert! Savings cannot be zero or negative!");
 
-      console.log("*** Updating existing Income record ***");
+      console.log("*** Updating existing Savings record ***");
       const updatedSavings = await Savings.findOneAndUpdate(
         { year: this.year, month: this.month },
         { savings_amount: newSavingsAmt },
