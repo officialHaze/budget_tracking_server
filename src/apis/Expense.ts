@@ -15,6 +15,40 @@ export class ExpenseAPI {
     this.reason = reason;
   }
 
+  private static calculateTotaExpenses(expenses: number[]) {
+    return expenses.reduce((total, amt) => {
+      return total + amt;
+    });
+  }
+
+  public static async getExpensesFor(year: number, month: number) {
+    try {
+      const expenses = await Expense.find({ year, month });
+
+      const expenseAmts = expenses.map((expense) => expense.expense_amount);
+
+      const totalExpense = this.calculateTotaExpenses(expenseAmts);
+
+      return { expenses, totalExpense };
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  public static async getExpensesForYear(year: number) {
+    try {
+      const expenses = await Expense.find({ year });
+
+      const expenseAmts = expenses.map((expense) => expense.expense_amount);
+
+      const totalExpense = this.calculateTotaExpenses(expenseAmts);
+
+      return { expenses, totalExpense };
+    } catch (error) {
+      throw error;
+    }
+  }
+
   public async new(expenseAmount: number, warnMe?: boolean) {
     try {
       // Deduct the expense from the income of the provided month for the provided year
