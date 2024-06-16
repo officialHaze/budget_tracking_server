@@ -6,6 +6,7 @@ import mongoose from "mongoose";
 import RouteErrorHandler from "./handlers/RouteErrorHandler";
 import ExpressConfig from "./ExpressConfig";
 import RouteInitializer from "./RouteInitializer";
+import Authenticator from "./middlewares/Authenticator";
 
 class Server {
   static app = express();
@@ -37,6 +38,9 @@ class Server {
 
     // Listen on PORT
     this.listen();
+
+    // Authenticator middleware
+    this.app.use("/api/*", Authenticator.authenticate);
 
     // Routes
     RouteInitializer.init(this.app);
