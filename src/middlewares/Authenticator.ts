@@ -14,7 +14,7 @@ export default class Authenticator {
       const secretBuff = await fs.readFile(
         path.join(__dirname, "../../secretkey.pem")
       );
-      const secretKey = secretBuff.toString();
+      const secretKey = secretBuff.toString().replace(/\/n/, "");
 
       if (secret !== secretKey)
         throw { status: 403, error: "You are not allowed here!" };
