@@ -29,12 +29,21 @@ export class IncomeAPI {
     }
   }
 
-  public async update(newAmount: number, oldAmount: number, to: string) {
+  public async update(
+    newAmount: number,
+    oldAddedIncome: number,
+    oldOutstanding: number,
+    to: string
+  ) {
     try {
-      let newOutstanding = 0;
+      let newOutstanding = oldOutstanding;
+      let newIncomeAdded = oldAddedIncome;
 
-      if (to === "add") newOutstanding = oldAmount + newAmount;
-      else if (to === "deduct") newOutstanding = oldAmount - newAmount;
+      if (to === "add") {
+        newOutstanding = oldOutstanding + newAmount;
+        newIncomeAdded = oldAddedIncome + newAmount;
+      } else if (to === "deduct") newOutstanding = oldOutstanding - newAmount;
+      else throw new Error("Provide a valid update identifier!");
 
       if (newOutstanding < 0)
         throw new Error("!!! Alert! Oustanding income is going below zero!");
@@ -42,7 +51,7 @@ export class IncomeAPI {
       console.log("*** Updating existing Income record ***");
       const updatedIncome = await Income.findOneAndUpdate(
         { year: this.year, month: this.month },
-        { outstanding: newOutstanding },
+        { outstanding: newOutstanding, income_added: newIncomeAdded },
         { new: true }
       );
       console.log(updatedIncome);
@@ -67,7 +76,7 @@ export class IncomeAPI {
       }
 
       // Update the existing record
-      await this.update(amount, income.outstanding, "add");
+      await this.update(amount, income.income_added, income.outstanding, "add");
     } catch (error) {
       throw error;
     }
@@ -87,7 +96,12 @@ export class IncomeAPI {
           "No income report found for the provided year and month!"
         );
 
-      await this.update(amount, income.outstanding, "deduct");
+      await this.update(
+        amount,
+        income.income_added,
+        income.outstanding,
+        "deduct"
+      );
     } catch (error) {
       throw error;
     }
