@@ -1,5 +1,8 @@
 import Expense from "../models/Expense";
+import FileSaver from "./FileSaver";
 import { IncomeAPI as Income, Outstanding } from "./Income";
+import Parser from "./Parser";
+import Workbook from "./Workbook";
 
 export class ExpenseAPI {
   year: number;
@@ -23,13 +26,44 @@ export class ExpenseAPI {
 
   public static async getExpensesFor(year: number, month: number) {
     try {
-      const expenses = await Expense.find({ year, month });
+      const expenses = await Expense.find(
+        { year, month },
+        { __v: false, updatedAt: false }
+      ).lean();
+
+      const expenseGroupsByMonth = ExpenseGroup.createGroupByMonth(expenses);
 
       const expenseAmts = expenses.map((expense) => expense.expense_amount);
 
       const totalExpense = this.calculateTotaExpenses(expenseAmts);
 
-      return { expenses, totalExpense };
+      // Parse the json data into a xl sheet
+      const wb = new Workbook();
+      expenseGroupsByMonth.forEach((groupObj) => {
+        // Serialize for excel viewing
+        const serializedExpenses = groupObj.expenses.map((expenseRec) => {
+          return {
+            "Expense Amount": expenseRec.expense_amount,
+            "Paid to": expenseRec.paid_to,
+            "Paid on": expenseRec.createdAt,
+          };
+        });
+
+        // Create an excel sheet
+        const ws = Parser.jsonToExcel(serializedExpenses);
+        // Append the ws to the workbook
+        wb.appendSheet(ws, groupObj.month);
+      });
+
+      // Save the wb
+      const filename = `${Date.now()}_expense_report.xlsx`;
+      FileSaver.saveExcel(wb.getWbInstance(), filename);
+
+      return {
+        expenses: expenseGroupsByMonth,
+        totalExpense,
+        xlUniqueFilename: filename,
+      };
     } catch (error) {
       throw error;
     }
@@ -37,7 +71,10 @@ export class ExpenseAPI {
 
   public static async getExpensesForYear(year: number) {
     try {
-      const expenses = await Expense.find({ year });
+      const expenses = await Expense.find(
+        { year },
+        { __v: false, updatedAt: false }
+      ).lean();
 
       const expenseAmts = expenses.map((expense) => expense.expense_amount);
 
@@ -124,5 +161,54 @@ class ExpenseWarning {
     } catch (error) {
       throw error;
     }
+  }
+}
+
+class ExpenseGroup {
+  public static createGroupByMonth(expenses: any[]) {
+    const months = [
+      "Jan",
+      "Feb",
+      "Mar",
+      "Apr",
+      "May",
+      "Jun",
+      "Jul",
+      "Aug",
+      "Sep",
+      "Oct",
+      "Nov",
+      "Dec",
+    ];
+
+    let uniqueMonths: number[] = [];
+    let groups: { month: string; expenses: any[] }[] = [];
+
+    expenses.forEach((expenseRec, idx) => {
+      if (!uniqueMonths.includes(expenseRec.month))
+        uniqueMonths.push(expenseRec.month);
+
+      const idxOfUniqueMonth = uniqueMonths.indexOf(expenseRec.month);
+
+      if (!groups[idxOfUniqueMonth]) {
+        const group: { month: string; expenses: any[] } = {
+          month: months[expenseRec.month - 1],
+          expenses: [expenseRec],
+        };
+        groups.push(group);
+      } else {
+        const group = groups[idxOfUniqueMonth];
+        const expenses = group.expenses;
+        expenses.push(expenseRec);
+
+        const updatedGroup: { month: string; expenses: any[] } = {
+          ...group,
+          expenses: [...expenses],
+        };
+        groups[idxOfUniqueMonth] = updatedGroup;
+      }
+    });
+
+    return groups;
   }
 }

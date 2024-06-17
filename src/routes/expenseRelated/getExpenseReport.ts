@@ -1,5 +1,6 @@
 import express, { NextFunction, Request, Response } from "express";
 import { ExpenseAPI as Expense } from "../../apis/Expense";
+import env from "../../../env.json";
 
 const router = express.Router();
 
@@ -13,14 +14,20 @@ router.get(
       if (!year) throw { status: 400, error: "Year is required!" };
       if (!month) throw { status: 400, error: "Month is required" };
 
-      const { expenses, totalExpense } = await Expense.getExpensesFor(
-        parseInt(year),
-        parseInt(month)
-      );
+      const { expenses, totalExpense, xlUniqueFilename } =
+        await Expense.getExpensesFor(parseInt(year), parseInt(month));
+
+      // Create the report download link
+      const downLink = env.DOMAIN + `/download_report/${xlUniqueFilename}`;
 
       return res
         .status(200)
-        .json({ message: "Success!", totalExpense, expenses });
+        .json({
+          message: "Success!",
+          totalExpense,
+          expenses,
+          downloadReport: downLink,
+        });
     } catch (error) {
       console.error(error);
       return next(error);
