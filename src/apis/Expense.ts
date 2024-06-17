@@ -76,11 +76,39 @@ export class ExpenseAPI {
         { __v: false, updatedAt: false }
       ).lean();
 
+      const expenseGroupsByMonth = ExpenseGroup.createGroupByMonth(expenses);
+
       const expenseAmts = expenses.map((expense) => expense.expense_amount);
 
       const totalExpense = this.calculateTotaExpenses(expenseAmts);
 
-      return { expenses, totalExpense };
+      // Parse the json data into a xl sheet
+      const wb = new Workbook();
+      expenseGroupsByMonth.forEach((groupObj) => {
+        // Serialize for excel viewing
+        const serializedExpenses = groupObj.expenses.map((expenseRec) => {
+          return {
+            "Expense Amount": expenseRec.expense_amount,
+            "Paid to": expenseRec.paid_to,
+            "Paid on": expenseRec.createdAt,
+          };
+        });
+
+        // Create an excel sheet
+        const ws = Parser.jsonToExcel(serializedExpenses);
+        // Append the ws to the workbook
+        wb.appendSheet(ws, groupObj.month);
+      });
+
+      // Save the wb
+      const filename = `${Date.now()}_expense_report_${year}.xlsx`;
+      FileSaver.saveExcel(wb.getWbInstance(), filename);
+
+      return {
+        expenses: expenseGroupsByMonth,
+        totalExpense,
+        xlUniqueFilename: filename,
+      };
     } catch (error) {
       throw error;
     }

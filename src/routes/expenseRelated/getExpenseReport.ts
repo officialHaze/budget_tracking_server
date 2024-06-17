@@ -20,14 +20,12 @@ router.get(
       // Create the report download link
       const downLink = env.DOMAIN + `/download_report/${xlUniqueFilename}`;
 
-      return res
-        .status(200)
-        .json({
-          message: "Success!",
-          totalExpense,
-          expenses,
-          downloadReport: downLink,
-        });
+      return res.status(200).json({
+        message: "Success!",
+        totalExpense,
+        expenses,
+        downloadReport: downLink,
+      });
     } catch (error) {
       console.error(error);
       return next(error);
@@ -43,13 +41,21 @@ router.get(
       const year = req.params.year;
       if (!year) throw { status: 400, error: "Year is required!" };
 
-      const { expenses, totalExpense } = await Expense.getExpensesForYear(
-        parseInt(year)
-      );
+      const { expenses, totalExpense, xlUniqueFilename } =
+        await Expense.getExpensesForYear(parseInt(year));
+
+      // Create the report download link
+      const downLink = env.DOMAIN + `/download_report/${xlUniqueFilename}`;
 
       return res
         .status(200)
-        .json({ message: "Success!", totalExpense, expenses });
+        .json({
+          message: "Success!",
+          year,
+          totalExpense,
+          expenses,
+          downloadReport: downLink,
+        });
     } catch (error) {
       console.error(error);
       return next(error);
