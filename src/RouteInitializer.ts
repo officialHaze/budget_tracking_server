@@ -3,6 +3,8 @@ import incomeRouteController from "./routes/incomeRelated/income";
 import newExpense from "./routes/expenseRelated/newExpense";
 import savings from "./routes/savingsRelated/savings";
 import addMoney from "./routes/addMoney";
+import getExpenseReport from "./routes/expenseRelated/getExpenseReport";
+import downloadReport from "./routes/reportRelated/downloadReport";
 
 export default class RouteInitializer {
   public static init(app: Express) {
@@ -10,5 +12,7 @@ export default class RouteInitializer {
     app.use("/api/new_expense", newExpense);
     app.use("/api/savings", savings);
     app.use("/api/add_money", addMoney);
+    app.use("/api/report/expenses", getExpenseReport);
+    app.use("/download_report", downloadReport);
   }
 }

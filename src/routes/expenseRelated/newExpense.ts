@@ -19,7 +19,9 @@ router.post("/", async (req: Request, res: Response, next: NextFunction) => {
     const expense = new Expense(year, month, paid_to, reason);
     const warning = await expense.new(expense_amount, true);
 
-    return res.status(200).json({ message: warning ?? "Success!" });
+    return res
+      .status(200)
+      .json({ message: warning ? warning.message : "Success!" });
   } catch (error) {
     console.error(error);
     return next(error);

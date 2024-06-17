@@ -8,7 +8,7 @@ export default class RouteErrorHandler {
     next: NextFunction
   ) {
     const errStatus = err.status ?? 500;
-    const errMessage = err.error ?? "Server error!";
+    const errMessage = err.error ?? err.message ?? "Server error!";
 
     res.status(errStatus).json({ message: errMessage });
   }
