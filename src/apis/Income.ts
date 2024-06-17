@@ -1,4 +1,9 @@
 import Income from "../models/Income";
+import DownloadLinkGenerator from "./DownloadLinkGenerator";
+import FileSaver from "./FileSaver";
+import GroupData from "./GroupData";
+import Parser from "./Parser";
+import Workbook from "./Workbook";
 
 export class IncomeAPI {
   private year: number; // Year on which income is generated
@@ -102,6 +107,79 @@ export class IncomeAPI {
         income.outstanding,
         "deduct"
       );
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  // Get income report for a particular month of a particular year
+  public static async getReportForMonthOf(year: number, month: number) {
+    try {
+      const incomeRecord = await Income.findOne(
+        { year, month },
+        { __v: false }
+      ).lean();
+      if (!incomeRecord) throw new Error("No income record found!");
+
+      const serializedIncomeRecord = {
+        Outstanding: incomeRecord.outstanding,
+        "Total income added": incomeRecord.income_added,
+        Date: incomeRecord.createdAt,
+      };
+
+      const wb = new Workbook();
+      const ws = Parser.jsonToExcel([serializedIncomeRecord]);
+      wb.appendSheet(ws, "IncomeRecord");
+
+      // Save the wb
+      const filename = `${Date.now()}_income_report.xlsx`;
+      FileSaver.saveExcel(wb.getWbInstance(), filename);
+
+      return {
+        incomeRecord,
+        downloadReport: DownloadLinkGenerator.reportDownloadLink(filename),
+      };
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  // Get income report of a particular year
+  public static async getReportForYear(year: number) {
+    try {
+      const incomeRecords = await Income.find(
+        { year },
+        { __v: false, updatedAt: false }
+      ).lean();
+      if (incomeRecords.length <= 0)
+        throw new Error("No income records found!");
+
+      // Group the data as per each month
+      const groupedData = GroupData.groupByMonth(incomeRecords);
+
+      const wb = new Workbook();
+      groupedData.forEach((group) => {
+        // Serialize the records
+        const serializedRecords = group.records.map((record) => {
+          return {
+            Outstanding: record.outstanding,
+            "Total income added": record.income_added,
+            Date: record.createdAt,
+          };
+        });
+        // Create a ws
+        const ws = Parser.jsonToExcel(serializedRecords);
+        wb.appendSheet(ws, group.month);
+      });
+
+      // Save the wb
+      const filename = `${Date.now()}_income_report_${year}.xlsx`;
+      FileSaver.saveExcel(wb.getWbInstance(), filename);
+
+      return {
+        incomeRecords: groupedData,
+        downloadReport: DownloadLinkGenerator.reportDownloadLink(filename),
+      };
     } catch (error) {
       throw error;
     }
