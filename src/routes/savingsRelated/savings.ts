@@ -1,6 +1,7 @@
 import express, { NextFunction, Request, Response } from "express";
 import { SavingsAPI as Savings } from "../../apis/Savings";
 import { IncomeAPI as Income, Outstanding } from "../../apis/Income";
+import Today from "../../apis/Today";
 
 const router = express.Router();
 
@@ -8,11 +9,11 @@ router.post(
   "/deposit",
   async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const { year, month, savings_amount } = req.body;
-      if (!year) throw { status: 400, error: "Year is required!" };
-      if (!month) throw { status: 400, error: "Month is required!" };
+      const { savings_amount } = req.body;
       if (!savings_amount)
         throw { status: 400, error: "Savings amount is required!" };
+
+      const { year, month } = Today.getYearAndMonth();
 
       const outstandingIncome = await Outstanding.getOutstandingFor(
         year,
@@ -45,11 +46,11 @@ router.post(
   "/withdraw",
   async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const { year, month, withdraw_amount } = req.body;
-      if (!year) throw { status: 400, error: "Year is required!" };
-      if (!month) throw { status: 400, error: "Month is required!" };
+      const { withdraw_amount } = req.body;
       if (!withdraw_amount)
         throw { status: 400, error: "Withdraw mount is required!" };
+
+      const { year, month } = Today.getYearAndMonth();
 
       const savings = new Savings(year, month);
 
