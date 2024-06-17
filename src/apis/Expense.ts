@@ -1,5 +1,6 @@
 import Expense from "../models/Expense";
 import FileSaver from "./FileSaver";
+import GroupData from "./GroupData";
 import { IncomeAPI as Income, Outstanding } from "./Income";
 import Parser from "./Parser";
 import Workbook from "./Workbook";
@@ -33,7 +34,7 @@ export class ExpenseAPI {
 
       if (expenses.length <= 0) throw new Error("No expense record found!");
 
-      const expenseGroupsByMonth = ExpenseGroup.createGroupByMonth(expenses);
+      const expenseGroupsByMonth = GroupData.groupByMonth(expenses);
 
       const expenseAmts = expenses.map((expense) => expense.expense_amount);
 
@@ -43,7 +44,7 @@ export class ExpenseAPI {
       const wb = new Workbook();
       expenseGroupsByMonth.forEach((groupObj) => {
         // Serialize for excel viewing
-        const serializedExpenses = groupObj.expenses.map((expenseRec) => {
+        const serializedExpenses = groupObj.records.map((expenseRec) => {
           return {
             "Expense Amount": expenseRec.expense_amount,
             "Paid to": expenseRec.paid_to,
@@ -80,7 +81,7 @@ export class ExpenseAPI {
 
       if (expenses.length <= 0) throw new Error("No expense record found!");
 
-      const expenseGroupsByMonth = ExpenseGroup.createGroupByMonth(expenses);
+      const expenseGroupsByMonth = GroupData.groupByMonth(expenses);
 
       const expenseAmts = expenses.map((expense) => expense.expense_amount);
 
@@ -90,7 +91,7 @@ export class ExpenseAPI {
       const wb = new Workbook();
       expenseGroupsByMonth.forEach((groupObj) => {
         // Serialize for excel viewing
-        const serializedExpenses = groupObj.expenses.map((expenseRec) => {
+        const serializedExpenses = groupObj.records.map((expenseRec) => {
           return {
             "Expense Amount": expenseRec.expense_amount,
             "Paid to": expenseRec.paid_to,
@@ -193,54 +194,5 @@ class ExpenseWarning {
     } catch (error) {
       throw error;
     }
-  }
-}
-
-class ExpenseGroup {
-  public static createGroupByMonth(expenses: any[]) {
-    const months = [
-      "Jan",
-      "Feb",
-      "Mar",
-      "Apr",
-      "May",
-      "Jun",
-      "Jul",
-      "Aug",
-      "Sep",
-      "Oct",
-      "Nov",
-      "Dec",
-    ];
-
-    let uniqueMonths: number[] = [];
-    let groups: { month: string; expenses: any[] }[] = [];
-
-    expenses.forEach((expenseRec, idx) => {
-      if (!uniqueMonths.includes(expenseRec.month))
-        uniqueMonths.push(expenseRec.month);
-
-      const idxOfUniqueMonth = uniqueMonths.indexOf(expenseRec.month);
-
-      if (!groups[idxOfUniqueMonth]) {
-        const group: { month: string; expenses: any[] } = {
-          month: months[expenseRec.month - 1],
-          expenses: [expenseRec],
-        };
-        groups.push(group);
-      } else {
-        const group = groups[idxOfUniqueMonth];
-        const expenses = group.expenses;
-        expenses.push(expenseRec);
-
-        const updatedGroup: { month: string; expenses: any[] } = {
-          ...group,
-          expenses: [...expenses],
-        };
-        groups[idxOfUniqueMonth] = updatedGroup;
-      }
-    });
-
-    return groups;
   }
 }
