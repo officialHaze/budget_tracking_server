@@ -10,14 +10,17 @@ router.get(
     try {
       const { year, month } = req.params;
 
-      const { incomeRecord, downloadReport } = await Income.getReportForMonthOf(
-        parseInt(year),
-        parseInt(month)
-      );
+      const { totalOutstanding, incomeRecord, downloadReport } =
+        await Income.getReportForMonthOf(parseInt(year), parseInt(month));
 
       return res
         .status(200)
-        .json({ message: "Success!", incomeRecord, downloadReport });
+        .json({
+          message: "Success!",
+          totalOutstanding,
+          incomeRecord,
+          downloadReport,
+        });
     } catch (error) {
       console.error(error);
       return next(error);
@@ -32,13 +35,18 @@ router.get(
     try {
       const { year } = req.params;
 
-      const { incomeRecords, downloadReport } = await Income.getReportForYear(
-        parseInt(year)
-      );
+      const { totalOutstanding, incomeRecords, downloadReport } =
+        await Income.getReportForYear(parseInt(year));
 
       return res
         .status(200)
-        .json({ message: "Success!", year, incomeRecords, downloadReport });
+        .json({
+          message: "Success!",
+          year,
+          totalOutstanding,
+          incomeRecords,
+          downloadReport,
+        });
     } catch (error) {
       console.error(error);
       return next(error);

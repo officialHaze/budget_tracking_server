@@ -136,6 +136,7 @@ export class IncomeAPI {
       FileSaver.saveExcel(wb.getWbInstance(), filename);
 
       return {
+        totalOutstanding: incomeRecord.outstanding,
         incomeRecord,
         downloadReport: DownloadLinkGenerator.reportDownloadLink(filename),
       };
@@ -150,7 +151,9 @@ export class IncomeAPI {
       const incomeRecords = await Income.find(
         { year },
         { __v: false, updatedAt: false }
-      ).lean();
+      )
+        .sort({ created_at: 1 })
+        .lean(); // Oldest to latest
       if (incomeRecords.length <= 0)
         throw new Error("No income records found!");
 
@@ -177,6 +180,7 @@ export class IncomeAPI {
       FileSaver.saveExcel(wb.getWbInstance(), filename);
 
       return {
+        totalOutstanding: incomeRecords[incomeRecords.length - 1].outstanding, // The outstanding amount is added concurrently with prev months, hence no need to add anything
         incomeRecords: groupedData,
         downloadReport: DownloadLinkGenerator.reportDownloadLink(filename),
       };
