@@ -31,6 +31,8 @@ export class ExpenseAPI {
         { __v: false, updatedAt: false }
       ).lean();
 
+      if (expenses.length <= 0) throw new Error("No expense record found!");
+
       const expenseGroupsByMonth = ExpenseGroup.createGroupByMonth(expenses);
 
       const expenseAmts = expenses.map((expense) => expense.expense_amount);
@@ -75,6 +77,8 @@ export class ExpenseAPI {
         { year },
         { __v: false, updatedAt: false }
       ).lean();
+
+      if (expenses.length <= 0) throw new Error("No expense record found!");
 
       const expenseGroupsByMonth = ExpenseGroup.createGroupByMonth(expenses);
 
