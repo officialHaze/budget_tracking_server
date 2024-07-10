@@ -1,14 +1,12 @@
 // API to manage everything related to today
 
 export default class Today {
-  private static date = new Date(Date.now());
-
   public static getYear() {
-    return this.date.getFullYear();
+    return new Date(Date.now()).getFullYear();
   }
 
   public static getMonth() {
-    return this.date.getMonth() + 1; // Counting from 1 and not 0
+    return new Date(Date.now()).getMonth() + 1; // Counting from 1 and not 0
   }
 
   public static getYearAndMonth() {
